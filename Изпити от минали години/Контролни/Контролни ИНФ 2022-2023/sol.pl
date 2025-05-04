@@ -1,16 +1,24 @@
+% Define the operations.
 operation(1, A, B, C):- C is A + B.
 operation(2, A, B, C):- C is A * B.
-operation(3, A, B, C):- C is A mod B.
+operation(3, A, B, C):- B =\= 0, C is A mod B. % prevent division by zero
 operation(4, A, B, C):- C is A - B.
 
-p(K, X):- member([A, _, _], X), pathK(X, A, A, K).
+% Entry point: check if there exists a path in graph X that evaluates to K.
+p(K, X) :- 
+    member([Start, Next, Op], X),
+    operation(Op, Start, Next, Accum),
+    pathK(X, Next, Accum, K, [Start, Next]).
 
-pathK(_, _, Accum, K):- 
-	0 =:= Accum - K.
-pathK(X, A, Accum, K):- 
-	member([A, B, Op], X),
-	operation(Op, Accum, B, NewAccum), 
-	pathK(X, B, NewAccum, K).
+% Base case: reached target K.
+pathK(_, _, K, K, _).
+
+% Recursive case: follow another edge.
+pathK(X, CurrentNode, Accum, K, Visited) :- 
+    member([CurrentNode, NextNode, Op], X),
+    \+ member(NextNode, Visited), % prevent cycles
+    operation(Op, Accum, NextNode, NewAccum),
+    pathK(X, NextNode, NewAccum, K, [NextNode | Visited]).
 
 :-use_module(library(clpfd)).
 ro([], [], S):- S #= 0.
